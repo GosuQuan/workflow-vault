@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>Magpie Token 用量看板</title>
+<style>
+ body{font-family:"Segoe UI",sans-serif;background:#0f1117;color:#e6e6e6;margin:0;padding:24px}
+ h1{font-size:20px;margin:0 0 4px} .sub{color:#888;font-size:12px;margin-bottom:20px}
+ .cards{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+ .card{background:#1a1d27;border:1px solid #262a38;border-radius:10px;padding:14px 20px;min-width:150px}
+ .card .v{font-size:26px;font-weight:600} .card .l{color:#888;font-size:12px;margin-top:2px}
+ .panel{background:#1a1d27;border:1px solid #262a38;border-radius:10px;padding:16px;margin-bottom:20px}
+ .panel h2{font-size:14px;margin:0 0 12px;color:#aab}
+ canvas{width:100%;height:220px;display:block}
+ table{width:100%;border-collapse:collapse;font-size:13px}
+ th,td{text-align:left;padding:6px 10px;border-bottom:1px solid #262a38}
+ th{color:#889;font-weight:500} td.num,th.num{text-align:right}
+ .row{display:flex;gap:20px;flex-wrap:wrap} .row .panel{flex:1;min-width:320px}
+</style>
+</head>
+<body>
+<h1>Magpie 本地模型 Token 用量</h1>
+<div class="sub">数据来自本地统计代理（usage.db）· 30秒自动刷新</div>
+<div class="cards" id="cards"></div>
+<div class="panel"><h2>每日 Token 用量（近30天，输入/输出堆叠）</h2><canvas id="chart"></canvas></div>
+<div class="row">
+  <div class="panel"><h2>按模型汇总</h2><table id="models"><thead><tr><th>模型</th><th class="num">输入</th><th class="num">输出</th><th class="num">总Token</th><th class="num">请求数</th></tr></thead><tbody></tbody></table></div>
+  <div class="panel"><h2>最近请求（50条）</h2><table id="recent"><thead><tr><th>时间</th><th>模型</th><th class="num">输入</th><th class="num">输出</th></tr></thead><tbody></tbody></table></div>
+</div>
+<script>
+const fmt=n=>n>=1e6?(n/1e6).toFixed(2)+"M":n>=1e3?(n/1e3).toFixed(1)+"k":n;
+function draw(daily){
+ const c=document.getElementById("chart"),ctx=c.getContext("2d");
+ const dpr=window.devicePixelRatio||1,W=c.clientWidth,H=c.clientHeight;
+ c.width=W*dpr;c.height=H*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+ if(!daily.length){ctx.fillStyle="#667";ctx.fillText("暂无数据",20,30);return}
+ const pad={l:52,r:10,t:12,b:26},cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
+ const max=Math.max(...daily.map(d=>d.prompt+d.completion),1)*1.1;
+ ctx.strokeStyle="#2a2e3d";ctx.fillStyle="#778";ctx.font="11px sans-serif";
+ for(let i=0;i<=4;i++){const y=pad.t+ch*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+  ctx.fillText(fmt(max*(4-i)/4),4,y+4)}
+ const bw=Math.max(4,cw/daily.length*0.65);
+ daily.forEach((d,i)=>{const x=pad.l+cw*(i+0.5)/daily.length-bw/2;
+  const hP=ch*d.prompt/max,hC=ch*d.completion/max;
+  ctx.fillStyle="#4f8cff";ctx.fillRect(x,pad.t+ch-hP,bw,hP);
+  ctx.fillStyle="#38c990";ctx.fillRect(x,pad.t+ch-hP-hC,bw,hC);
+  if(daily.length<=15||i%Math.ceil(daily.length/10)===0){ctx.fillStyle="#778";ctx.fillText(d.date.slice(5),x-12,H-8)}});
+}
+async function load(){
+ try{
+  const s=await (await fetch("/api/summary?days=30")).json(),t=s.totals;
+  document.getElementById("cards").innerHTML=[
+   ["总 Token",fmt(t.prompt_tokens+t.completion_tokens)],
+   ["输入 Token",fmt(t.prompt_tokens)],["输出 Token",fmt(t.completion_tokens)],
+   ["请求数",t.requests]
+  ].map(x=>`<div class="card"><div class="v">${x[1]}</div><div class="l">${x[0]}</div></div>`).join("");
+  document.querySelector("#models tbody").innerHTML=s.models.map(m=>
+   `<tr><td>${m.model}</td><td class="num">${fmt(m.prompt)}</td><td class="num">${fmt(m.completion)}</td><td class="num">${fmt(m.prompt+m.completion)}</td><td class="num">${m.requests}</td></tr>`).join("")||"<tr><td colspan=5>暂无</td></tr>";
+  document.querySelector("#recent tbody").innerHTML=s.recent.map(r=>
+   `<tr><td>${r.ts}</td><td>${r.model}</td><td class="num">${fmt(r.prompt)}</td><td class="num">${fmt(r.completion)}</td></tr>`).join("")||"<tr><td colspan=4>暂无</td></tr>";
+  draw(s.daily);
+ }catch(e){console.error(e)}
+}
+load();setInterval(load,30000);window.addEventListener("resize",load);
+</script>
+</body>
+</html>
