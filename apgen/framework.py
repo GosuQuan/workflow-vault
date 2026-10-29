@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """AP 双语课程材料生成框架:统一版式 + 公式上下标标记 ^{...} / _{...}。
 
 PPTX:标记解析为真实上下标(rPr baseline),不依赖花哨 Unicode。
@@ -24,7 +24,49 @@ MATH_FONT = "Cambria Math"
 DOC_ZH_EA = "微软雅黑"
 DOC_MATH = "Cambria Math"
 
-MARK_RE = re.compile(r"(\^\{[^}]*\}|_\{[^}]*\})")
+NESTED_MARK_RE = re.compile(r"(\^\{|\_\{|\})")
+
+
+def split_marked(text):
+    """解析 ^{...}/_{...} 标记(递归,支持嵌套如 e^{5x^{2}})。
+    嵌套内容拍平到外层格式:'e^{5x^{2}}' -> [('e',None),('5x2','sup')]
+    '∫_{0}^{x^{2}}' -> [('∫',None),('0','sub'),('x2','sup')]
+    """
+    s = str(text)
+    out = []
+    stack = []
+    buf = ""
+    i = 0
+    n = len(s)
+    while i < n:
+        ch = s[i]
+        if ch in "^_" and i + 1 < n and s[i + 1] == "{":
+            if buf:
+                k = {"^{": "sup", "_{": "sub"}.get(stack[-1]) if stack else None
+                out.append((buf, k))
+                buf = ""
+            stack.append(ch + "{")
+            i += 2
+        elif ch == "}" and stack:
+            k = {"^{": "sup", "_{": "sub"}.get(stack[-1])
+            if buf:
+                out.append((buf, k))
+                buf = ""
+            stack.pop()
+            i += 1
+        else:
+            buf += ch
+            i += 1
+    if buf:
+        k = {"^{": "sup", "_{": "sub"}.get(stack[-1]) if stack else None
+        out.append((buf, k))
+    merged = []
+    for seg, k in out:
+        if merged and merged[-1][1] == k and k is not None:
+            merged[-1] = (merged[-1][0] + seg, k)
+        else:
+            merged.append((seg, k))
+    return [(t, k) for t, k in merged if t]
 
 THEMES = {
     "calc": {"dark": RGBColor(0x1F, 0x4E, 0x79), "accent": RGBColor(0x2E, 0x75, 0xB6),
@@ -116,21 +158,7 @@ EXAM_INFO = {
 
 # ---------- 标记解析 ----------
 
-def split_marked(text):
-    """'x^{n-1}+a_{1}' -> [('x', None), ('n-1','sup'), ('+a', None), ('1','sub')]"""
-    parts = MARK_RE.split(str(text))
-    out = []
-    for p in parts:
-        if not p:
-            continue
-        if p.startswith("^{") and p.endswith("}"):
-            out.append((p[2:-1], "sup"))
-        elif p.startswith("_{") and p.endswith("}"):
-            out.append((p[2:-1], "sub"))
-        else:
-            out.append((p, None))
-    return out
-
+# (split_marked 定义于文件顶部,支持嵌套 ^{...}/_{...})
 
 def _apply_baseline(run, kind):
     if kind is None:
@@ -181,8 +209,7 @@ def header_bar(slide, en, zh, tag, th):
     p = para(tf, True)
     add_rich_runs(p, en, 24, bold=True, color=RGBColor(0xFF, 0xFF, 0xFF))
     p2 = tf.add_paragraph()
-    r = p2.add_run(); r.text = zh; r.font.size = Pt(13)
-    r.font.color.rgb = RGBColor(0xD5, 0xE5, 0xF0); r.font.name = ZH_FONT
+    add_rich_runs(p2, zh, 13, color=RGBColor(0xD5, 0xE5, 0xF0), font=ZH_FONT)
     tbox = slide.shapes.add_textbox(Inches(9.6), Inches(0.28), Inches(3.4), Inches(0.5))
     p3 = para(tbox.text_frame, True); p3.alignment = PP_ALIGN.RIGHT
     add_rich_runs(p3, tag, 14, bold=True, color=RGBColor(0xFF, 0xFF, 0xFF))
@@ -209,8 +236,7 @@ def bullets(slide, items, x, y, w, h, th, en_size=16, zh_size=13):
         add_rich_runs(p, en, en_size)
         if zh:
             p2 = tf.add_paragraph(); p2.space_after = Pt(10)
-            r = p2.add_run(); r.text = zh
-            r.font.size = Pt(zh_size); r.font.color.rgb = RGBColor(0x6B, 0x72, 0x7B); r.font.name = ZH_FONT
+            add_rich_runs(p2, zh, zh_size, color=RGBColor(0x6B, 0x72, 0x7B), font=ZH_FONT)
     return box
 
 
@@ -223,8 +249,7 @@ def formula_box(slide, text, x, y, w, h, th, size=20, sub=None):
     add_rich_runs(p, text, size, bold=True, color=th["dark"], font=MATH_FONT)
     if sub:
         p2 = tf.add_paragraph(); p2.alignment = PP_ALIGN.CENTER
-        r = p2.add_run(); r.text = sub
-        r.font.size = Pt(12); r.font.color.rgb = RGBColor(0x6B, 0x72, 0x7B); r.font.name = ZH_FONT
+        add_rich_runs(p2, sub, 12, color=RGBColor(0x6B, 0x72, 0x7B), font=ZH_FONT)
     return shp
 
 
@@ -256,8 +281,7 @@ def example_slide(prs, th, tag, num, kind, problem_en, problem_zh, steps, answer
     tf = panel.text_frame; tf.word_wrap = True; tf.margin_left = Inches(0.25); tf.margin_top = Inches(0.08)
     add_rich_runs(para(tf, True), problem_en, 15, bold=True)
     p2 = tf.add_paragraph()
-    r = p2.add_run(); r.text = problem_zh
-    r.font.size = Pt(12.5); r.font.color.rgb = RGBColor(0x44, 0x4C, 0x55); r.font.name = ZH_FONT
+    add_rich_runs(p2, problem_zh, 12.5, color=RGBColor(0x44, 0x4C, 0x55), font=ZH_FONT)
     box = slide.shapes.add_textbox(Inches(0.6), Inches(2.7), Inches(12.1), Inches(3.4))
     tf2 = box.text_frame; tf2.word_wrap = True
     first = True
@@ -284,8 +308,7 @@ def excerpt_slide(prs, th, tag, title_en, title_zh, caption, source, img_path, i
     header_bar(slide, title_en, title_zh, tag, th)
     cap = slide.shapes.add_textbox(Inches(0.6), Inches(1.08), Inches(12.1), Inches(0.75))
     tf = cap.text_frame; tf.word_wrap = True
-    r = para(tf, True).add_run(); r.text = caption
-    r.font.size = Pt(12.5); r.font.bold = True; r.font.color.rgb = th["dark"]; r.font.name = ZH_FONT
+    add_rich_runs(para(tf, True), caption, 12.5, bold=True, color=th["dark"], font=ZH_FONT)
     r2 = tf.add_paragraph().add_run(); r2.text = source
     r2.font.size = Pt(9.5); r2.font.italic = True; r2.font.color.rgb = RGBColor(0x7A, 0x84, 0x8E)
     img_h = img_w_in / ratio
@@ -314,8 +337,7 @@ def practice_slide(prs, th, tag, items, answers, page, title_en, title_zh, hint_
         add_rich_runs(p, f"{i}. ", 15, bold=True, color=th["dark"])
         add_rich_runs(p, en, 15, font=MATH_FONT)
         p2 = tf.add_paragraph(); p2.space_after = Pt(12)
-        r = p2.add_run(); r.text = "   " + zh
-        r.font.size = Pt(12.5); r.font.color.rgb = RGBColor(0x6B, 0x72, 0x7B); r.font.name = ZH_FONT
+        add_rich_runs(p2, "   " + zh, 12.5, color=RGBColor(0x6B, 0x72, 0x7B), font=ZH_FONT)
     abox = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.6), Inches(6.25), Inches(12.1), Inches(0.6))
     abox.fill.solid(); abox.fill.fore_color.rgb = th["light"]; abox.line.color.rgb = th["accent"]
     atf = abox.text_frame; atf.vertical_anchor = MSO_ANCHOR.MIDDLE
@@ -354,12 +376,16 @@ def lesson_slide(prs, th, tag, lesson, page):
         bullets(slide, [(c["en"], c["zh"]) for c in lesson["concepts"]],
                 0.7, y, 12.0, 2.1, th, en_size=14.5, zh_size=12)
         y += min(2.15 + 0.62 * n, 2.9)
-    for f in lesson.get("formulas", []):
+    tables = lesson.get("tables", [])
+    formulas = lesson.get("formulas", [])
+    max_f = 1 if tables else 2
+    for f in formulas[:max_f]:
         formula_box(slide, f["f"], 1.2, y, 10.9, 0.78, th, size=19, sub=f.get("note"))
         y += 0.95
-    for t in lesson.get("tables", []):
-        hh = 0.5 + 0.42 * len(t["rows"])
-        make_table(slide, t["header"], t["rows"], 1.2, y, 10.9, hh, th,
+    for t in tables:
+        rows = min(len(t["rows"]), 3)
+        hh = 0.45 + 0.42 * rows
+        make_table(slide, t["header"], t["rows"][:3], 1.2, y, 10.9, hh, th,
                    widths=t.get("widths"), font_size=12)
         y += hh + 0.25
     footer(slide, th, page, tag)

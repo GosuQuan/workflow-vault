@@ -12,6 +12,13 @@
 
 坐标怎么定：先用看图软件在 144 dpi 版面上读出大致框选范围，跑一次看输出尺寸，微调一两次即可。
 
+批量裁剪时，每个渲染批次写一个批处理脚本（复用同样的 `crop()` 帮手与缩放因子），每组调用前用注释标明用途与所属单元，例如：
+
+```python
+# Calc 2024: Q1 (p3, Riemann/accumulation -> Unit 8), Q2 (p4, parametric motion -> Unit 9)
+crop("assets/render/calchi2/page-0001.png", (55, 15, 1165, 950), "assets/crops/calc_q1.png")
+```
+
 ## 依赖
 
 ```bash

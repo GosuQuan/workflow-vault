@@ -7,7 +7,7 @@
 
 | 目录 | 是什么 | 依赖 |
 | --- | --- | --- |
-| [apgen/](apgen/) | AP 双语课程材料生成框架：PPTX 课件 + DOCX 讲义/大纲，公式用 `^{...}` / `_{...}` 标记上下标，不用 LaTeX | python-pptx, python-docx |
+| [apgen/](apgen/) | AP 双语课程材料生成框架：PPTX 课件 + DOCX 讲义/大纲，公式用 `^{...}` / `_{...}` 标记上下标（支持嵌套），含校验→批量构建→回归校验流水线 | python-pptx, python-docx |
 | [exam-cropper/](exam-cropper/) | 把渲染好的试卷页面按坐标裁出节选图（仅个人使用，不再分发） | Pillow |
 | [deck-verifier/](deck-verifier/) | 生成后自动校验课件：页数、图片数、关键文本是否在场 | python-pptx |
 | [md-to-docx/](md-to-docx/) | 中文 Markdown → 打印友好 DOCX（A4、中文字体、表格、等宽块），一条命令 | python-docx |
@@ -20,10 +20,13 @@
 # 1. 校验一个单元内容文件（内容与版式分离，先卡格式再渲染）
 python apgen/validate_unit.py apgen/content/calc_u01.py
 
-# 2. 中文 Markdown 一键转 DOCX
+# 2. 批量构建全部单元材料，并对生成物做回归校验
+python apgen/build_all.py && python apgen/verify_all.py
+
+# 3. 中文 Markdown 一键转 DOCX
 python md-to-docx/md_to_docx.py 手册.md
 
-# 3. 启动本地 LLM token 用量看板（零依赖）
+# 4. 启动本地 LLM token 用量看板（零依赖）
 cd magpie-dashboard && python server.py   # http://127.0.0.1:8788
 ```
 
