@@ -12,6 +12,7 @@
 | [deck-verifier/](deck-verifier/) | 生成后自动校验课件：页数、图片数、关键文本是否在场 | python-pptx |
 | [md-to-docx/](md-to-docx/) | 中文 Markdown → 打印友好 DOCX（A4、中文字体、表格、等宽块），一条命令 | python-docx |
 | [magpie-dashboard/](magpie-dashboard/) | 本地 LLM token 用量看板：统计代理 + SQLite + 网页，纯标准库零依赖 | 无 |
+| [skills/](skills/README.md) | 可复用 skill：课件诊断与分步揭示、结构化内容生成多格式资料包 | 按任务选择 Office 工具 |
 | [docs/](docs/) | 多机 Git 同步约定、每日沉淀 SOP | - |
 
 ## 快速上手
