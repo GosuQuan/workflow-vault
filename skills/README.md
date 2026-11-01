@@ -5,6 +5,7 @@
 | Skill | 适用任务 | 核心产出 |
 | --- | --- | --- |
 | [pptx-diagnose-and-reveal](pptx-diagnose-and-reveal/SKILL.md) | 课件文字颜色诊断、步骤与答案分次显示 | 修复副本与分层验收报告 |
+| [traceable-text-collection](traceable-text-collection/SKILL.md) | 批量文本获取、缓存与失败重试 | 来源清单、文本与待复核报告 |
 | [structured-materials-package](structured-materials-package/SKILL.md) | 结构化内容生成多格式资料并归档 | 资料包、产物清单及验证报告 |
 
 这些是流程文档，不是已安装的软件或通用修复器。使用前应检查输入条件和所需工具；验证报告须区分静态检查、渲染检查与实际播放检查。
