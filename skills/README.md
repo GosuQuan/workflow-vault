@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | [pptx-diagnose-and-reveal](pptx-diagnose-and-reveal/SKILL.md) | 课件文字颜色诊断、步骤与答案分次显示 | 修复副本与分层验收报告 |
 | [traceable-text-collection](traceable-text-collection/SKILL.md) | 批量文本获取、缓存与失败重试 | 来源清单、文本与待复核报告 |
-| [structured-materials-package](structured-materials-package/SKILL.md) | 结构化内容生成多格式资料并归档 | 资料包、产物清单及验证报告 |
+| [structured-materials-package](structured-materials-package/SKILL.md) | 结构化内容生成多格式资料、核对配图映射与离线交付 | 资料包、图文清单、嵌入核对及验证报告 |
 | [layered-runtime-verification](layered-runtime-verification/SKILL.md) | 多入口或有状态网页应用的分层验证 | 覆盖矩阵、断言结果与验证边界 |
 | [evidence-guided-review-loop](evidence-guided-review-loop/SKILL.md) | 模型或规则建议的证据审核、导出与执行复盘 | 审核快照、导出草稿及描述性复盘 |
 
