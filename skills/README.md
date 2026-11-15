@@ -9,5 +9,6 @@
 | [structured-materials-package](structured-materials-package/SKILL.md) | 结构化内容生成多格式资料、核对配图映射与离线交付 | 资料包、图文清单、嵌入核对及验证报告 |
 | [layered-runtime-verification](layered-runtime-verification/SKILL.md) | 多入口或有状态网页应用的分层验证 | 覆盖矩阵、断言结果与验证边界 |
 | [evidence-guided-review-loop](evidence-guided-review-loop/SKILL.md) | 模型或规则建议的证据审核、导出与执行复盘 | 审核快照、导出草稿及描述性复盘 |
+| [third-party-binary-intake-record](third-party-binary-intake-record/SKILL.md) | 第三方安装包或二进制的来源核对与校验记录 | 校验记录、失败标注及复核边界 |
 
 这些是流程文档，不是已安装的软件或通用修复器。使用前应检查输入条件和所需工具；验证报告须区分静态检查、渲染检查与实际播放检查。
