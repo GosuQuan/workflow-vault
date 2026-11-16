@@ -10,5 +10,7 @@
 | [layered-runtime-verification](layered-runtime-verification/SKILL.md) | 多入口或有状态网页应用的分层验证 | 覆盖矩阵、断言结果与验证边界 |
 | [evidence-guided-review-loop](evidence-guided-review-loop/SKILL.md) | 模型或规则建议的证据审核、导出与执行复盘 | 审核快照、导出草稿及描述性复盘 |
 | [third-party-binary-intake-record](third-party-binary-intake-record/SKILL.md) | 第三方安装包或二进制的来源核对与校验记录 | 校验记录、失败标注及复核边界 |
+| [official-template-roundtrip](official-template-roundtrip/SKILL.md) | 按第三方官方批量模板导出可再次上传的表格 | 列级兼容性断言、阻断原因与验证边界 |
+| [sparse-evidence-estimation](sparse-evidence-estimation/SKILL.md) | 证据稀疏且含未作答项时的逐项能力估计 | 分值、样本量、未测清单与可重建证据映射 |
 
 这些是流程文档，不是已安装的软件或通用修复器。使用前应检查输入条件和所需工具；验证报告须区分静态检查、渲染检查与实际播放检查。
